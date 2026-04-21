@@ -1,0 +1,58 @@
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+import urllib.request
+import urllib.parse
+from urllib.parse import urlparse, parse_qs
+
+# Configuration des associations
+ASSOCIATIONS = {
+    'mosquee_vaureal': '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', # ta clé live actuelle
+    # 'mosquee_paris': 'sk_live_...', # future association
+}
+
+class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        
+        if parsed.path == '/connection_token':
+            asso = params.get('asso', ['mosquee_vaureal'])[0]
+            stripe_key = ASSOCIATIONS.get(asso)
+            
+            if not stripe_key:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b'Association not found')
+                return
+            
+            try:
+                req = urllib.request.Request(
+                    'https://api.stripe.com/v1/terminal/connection_tokens',
+                    data=b'',
+                    headers={
+                        'Authorization': f'Bearer {stripe_key}',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    method='POST'
+                )
+                with urllib.request.urlopen(req) as response:
+                    result = json.loads(response.read())
+                    token = result['secret']
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'secret': token}).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        print(f'[SERVER] {args[0]} {args[1]}')
+
+if __name__ == '__main__':
+    print('Serveur démarré sur http://localhost:3000')
+    HTTPServer(('0.0.0.0', 3000), Handler).serve_forever()
