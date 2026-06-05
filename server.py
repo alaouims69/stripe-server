@@ -2,6 +2,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.request
 import urllib.parse
+import os
 from urllib.parse import urlparse, parse_qs
 
 # Configuration des associations
@@ -55,4 +56,6 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     print('Serveur démarré sur http://localhost:3000')
-    HTTPServer(('0.0.0.0', 3000), Handler).serve_forever()
+    port = int(os.environ.get('PORT', 3000))
+    print(f'Serveur démarré sur le port {port}')
+    HTTPServer(('0.0.0.0', port), Handler).serve_forever()
