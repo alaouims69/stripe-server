@@ -5,13 +5,18 @@ import urllib.parse
 import os
 from urllib.parse import urlparse, parse_qs
 
-# Configuration des associations
 ASSOCIATIONS = {
-    'mosquee_vaureal': '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', # ta clé live actuelle
-    # 'mosquee_paris': 'sk_live_...', # future association
+    'mosquee_vaureal': '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',
 }
 
 class Handler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(b'{"status": "ok"}')
+
     def do_POST(self):
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
@@ -55,7 +60,6 @@ class Handler(BaseHTTPRequestHandler):
         print(f'[SERVER] {args[0]} {args[1]}')
 
 if __name__ == '__main__':
-    print('Serveur démarré sur http://localhost:3000')
     port = int(os.environ.get('PORT', 3000))
     print(f'Serveur démarré sur le port {port}')
     HTTPServer(('0.0.0.0', port), Handler).serve_forever()
