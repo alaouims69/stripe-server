@@ -1,7 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.request
-import urllib.parse
 import os
 from urllib.parse import urlparse, parse_qs
 
@@ -11,8 +10,19 @@ ASSOCIATIONS = {
 
 class Handler(BaseHTTPRequestHandler):
 
+    def _cors_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self._cors_headers()
+        self.end_headers()
+
     def do_GET(self):
         self.send_response(200)
+        self._cors_headers()
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
         self.wfile.write(b'{"status": "ok"}')
@@ -20,17 +30,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
-        
+
         if parsed.path == '/connection_token':
             asso = params.get('asso', ['mosquee_vaureal'])[0]
             stripe_key = ASSOCIATIONS.get(asso)
-            
+
             if not stripe_key:
                 self.send_response(404)
+                self._cors_headers()
                 self.end_headers()
                 self.wfile.write(b'Association not found')
                 return
-            
+
             try:
                 req = urllib.request.Request(
                     'https://api.stripe.com/v1/terminal/connection_tokens',
@@ -45,15 +56,18 @@ class Handler(BaseHTTPRequestHandler):
                     result = json.loads(response.read())
                     token = result['secret']
                     self.send_response(200)
+                    self._cors_headers()
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({'secret': token}).encode())
             except Exception as e:
                 self.send_response(500)
+                self._cors_headers()
                 self.end_headers()
                 self.wfile.write(str(e).encode())
         else:
             self.send_response(404)
+            self._cors_headers()
             self.end_headers()
 
     def log_message(self, format, *args):
