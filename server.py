@@ -1,11 +1,11 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-import urllib.request
 import os
+import urllib.request
 from urllib.parse import urlparse, parse_qs
 
 ASSOCIATIONS = {
-    'mosquee_vaureal': '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',
+    'mosquee_vaureal': os.environ.get('STRIPE_SECRET_KEY', ''),
 }
 
 APP_VERSION = {
@@ -54,7 +54,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(404)
                 self._cors_headers()
                 self.end_headers()
-                self.wfile.write(b'Association not found')
+                self.wfile.write(b'Association not found or STRIPE_SECRET_KEY not configured')
                 return
 
             try:
