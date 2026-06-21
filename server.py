@@ -9,8 +9,8 @@ ASSOCIATIONS = {
 }
 
 APP_VERSION = {
-    "versionCode": 13,
-    "apkUrl": "https://github.com/alaouims69/MosqueeCollecte/releases/download/v11.2/MosqueeCollecte-v11.2.apk"
+    "versionCode": 14,
+    "apkUrl": "https://github.com/alaouims69/MosqueeCollecte/releases/download/v11.3/MosqueeCollecte-v11.3.apk"
 }
 
 class Handler(BaseHTTPRequestHandler):
